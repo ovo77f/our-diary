@@ -11,7 +11,14 @@ export default function SettingsModal({ onClose }) {
   const [color, setColor] = useState(auth.currentMember?.color)
   const [bgColor, setBgColor] = useState(auth.currentMember?.bgColor || BG_PALETTE[0])
   const [avatar, setAvatar] = useState(auth.currentMember?.avatar || null)
+  const [displayName, setDisplayName] = useState(auth.currentMember?.displayName || '')
   const [savingProfile, setSavingProfile] = useState(false)
+  const [profileError, setProfileError] = useState(null)
+  const [diaryTitle, setDiaryTitle] = useState(auth.diaryTitle)
+  const [addingDiary, setAddingDiary] = useState(false)
+  const [newDiary, setNewDiary] = useState({ title: '', owner: auth.session?.owner || '', repo: '', token: '' })
+  const [diaryBusy, setDiaryBusy] = useState(false)
+  const [diaryError, setDiaryError] = useState(null)
 
   const [tokenInput, setTokenInput] = useState('')
   const [tokenBusy, setTokenBusy] = useState(false)
@@ -37,16 +44,59 @@ export default function SettingsModal({ onClose }) {
   const [fieldBusy, setFieldBusy] = useState(false)
   const [removingFieldKey, setRemovingFieldKey] = useState(null)
 
-  const profileChanged = color !== auth.currentMember?.color
+  const profileChanged = displayName.trim() !== (auth.currentMember?.displayName || '')
+    || color !== auth.currentMember?.color
     || avatar !== (auth.currentMember?.avatar || null)
     || bgColor !== (auth.currentMember?.bgColor || BG_PALETTE[0])
 
-  async function handleSaveProfile() {
-    setSavingProfile(true)
+  function handleRenameDiary(e) {
+    e.preventDefault()
+    auth.renameDiary(diaryTitle)
+  }
+
+  async function handleAddDiary(e) {
+    e.preventDefault()
+    setDiaryBusy(true)
+    setDiaryError(null)
     try {
-      const updated = await updateMember(auth.client, auth.config, auth.configSha, auth.currentMember.id, { color, bgColor, avatar })
+      await auth.connect(newDiary)
+      setAddingDiary(false)
+      onClose()
+    } catch (err) {
+      setDiaryError(err.message || '일기장을 연결하지 못했어요.')
+    } finally {
+      setDiaryBusy(false)
+    }
+  }
+
+  async function handleSwitchDiary(id) {
+    if (id === auth.session?.id) return
+    setDiaryBusy(true)
+    setDiaryError(null)
+    try {
+      await auth.switchDiary(id)
+      onClose()
+    } catch (err) {
+      setDiaryError(err.message || '일기장을 전환하지 못했어요.')
+    } finally {
+      setDiaryBusy(false)
+    }
+  }
+
+  async function handleSaveProfile() {
+    const name = displayName.trim()
+    if (!name) {
+      setProfileError('이름을 입력해주세요.')
+      return
+    }
+    setSavingProfile(true)
+    setProfileError(null)
+    try {
+      const updated = await updateMember(auth.client, auth.config, auth.configSha, auth.currentMember.id, { displayName: name, color, bgColor, avatar })
       auth.setConfig(updated)
       await auth.refreshConfig()
+    } catch (err) {
+      setProfileError(err.message || '프로필을 저장하지 못했어요.')
     } finally {
       setSavingProfile(false)
     }
@@ -174,6 +224,10 @@ export default function SettingsModal({ onClose }) {
 
         <section className="modal-section">
           <h3>내 프로필</h3>
+          <label className="settings-profile-name">
+            <span>이름</span>
+            <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+          </label>
           <AvatarPicker
             value={avatar}
             fallbackColor={color}
@@ -182,6 +236,7 @@ export default function SettingsModal({ onClose }) {
           />
           <ColorPicker value={color} onChange={setColor} />
           <ColorPicker value={bgColor} onChange={setBgColor} label="배경색" palette={BG_PALETTE} />
+          {profileError && <p className="setup-error">{profileError}</p>}
           <button className="btn btn-primary btn-small" onClick={handleSaveProfile} disabled={savingProfile || !profileChanged}>
             {savingProfile ? '저장 중...' : '프로필 저장'}
           </button>
@@ -296,6 +351,52 @@ export default function SettingsModal({ onClose }) {
               </div>
             </form>
           )}
+        </section>
+
+        <section className="modal-section">
+          <h3>일기장 관리</h3>
+          <p className="settings-repo-info">일기장마다 다른 비공개 저장소를 등록해두고 전환할 수 있어요. 등록 정보는 이 브라우저에만 저장돼요.</p>
+
+          <form className="setup-form" onSubmit={handleRenameDiary}>
+            <label>
+              <span>현재 일기장 이름</span>
+              <input value={diaryTitle} onChange={(e) => setDiaryTitle(e.target.value)} placeholder="예: A 일기" required />
+            </label>
+            <button className="btn btn-small" type="submit" disabled={!diaryTitle.trim() || diaryTitle.trim() === auth.diaryTitle}>이름 저장</button>
+          </form>
+
+          <div className="diary-switch-list">
+            {auth.diaries.map((d) => (
+              <div key={d.id} className={`diary-switch-row ${d.id === auth.session?.id ? 'active' : ''}`}>
+                <div>
+                  <strong>{d.title}</strong>
+                  <small>{d.owner}/{d.repo}</small>
+                </div>
+                {d.id === auth.session?.id ? (
+                  <span className="diary-current-badge">현재</span>
+                ) : (
+                  <button type="button" className="btn btn-small" disabled={diaryBusy} onClick={() => handleSwitchDiary(d.id)}>전환</button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {!addingDiary ? (
+            <button type="button" className="btn btn-small" onClick={() => setAddingDiary(true)}>+ 일기장 추가</button>
+          ) : (
+            <form className="setup-form diary-add-form" onSubmit={handleAddDiary}>
+              <label><span>일기장 이름</span><input required placeholder="예: C 일기" value={newDiary.title} onChange={(e) => setNewDiary({ ...newDiary, title: e.target.value })} /></label>
+              <label><span>레포 소유자 (아이디)</span><input required value={newDiary.owner} onChange={(e) => setNewDiary({ ...newDiary, owner: e.target.value })} /></label>
+              <label><span>레포 이름</span><input required placeholder="예: our-diary-c" value={newDiary.repo} onChange={(e) => setNewDiary({ ...newDiary, repo: e.target.value })} /></label>
+              <label><span>Personal Access Token</span><input type="password" required placeholder="github_pat_..." value={newDiary.token} onChange={(e) => setNewDiary({ ...newDiary, token: e.target.value })} /></label>
+              {diaryError && <p className="setup-error">{diaryError}</p>}
+              <div className="entry-editor-actions">
+                <button type="button" className="btn btn-ghost" onClick={() => setAddingDiary(false)}>취소</button>
+                <button type="submit" className="btn btn-primary" disabled={diaryBusy}>{diaryBusy ? '연결 중...' : '추가하고 전환'}</button>
+              </div>
+            </form>
+          )}
+          {!addingDiary && diaryError && <p className="setup-error">{diaryError}</p>}
         </section>
 
         <section className="modal-section">

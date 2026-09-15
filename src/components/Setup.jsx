@@ -30,6 +30,17 @@ export default function Setup() {
   if (!auth.session) {
     return (
       <ScreenShell title="저장소 연결하기" subtitle={`${DIARY_WORD} 데이터를 저장할 GitHub private 레포와 개인 액세스 토큰을 입력해주세요.`}>
+        {auth.diaries.length > 0 && (
+          <div className="saved-diary-list">
+            <strong>저장된 일기장</strong>
+            {auth.diaries.map((d) => (
+              <button key={d.id} type="button" className="btn saved-diary-button" onClick={() => auth.switchDiary(d.id)}>
+                <span>{d.title}</span><small>{d.owner}/{d.repo}</small>
+              </button>
+            ))}
+            <div className="settings-divider" />
+          </div>
+        )}
         <form onSubmit={handleConnect} className="setup-form">
           <label>
             <span>레포 소유자 (아이디)</span>

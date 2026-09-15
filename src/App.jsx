@@ -29,6 +29,10 @@ function Shell() {
     }
   }, [activeMemberId, auth.members])
 
+  useEffect(() => {
+    document.title = auth.diaryTitle
+  }, [auth.diaryTitle])
+
   const ready = auth.status === 'ready' && auth.currentMember
 
   if (!ready) return <Setup />

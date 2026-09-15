@@ -360,3 +360,16 @@
   .sidebar-bottom { flex-direction: row; margin-left: auto; flex-shrink: 0; }
   .main-area { padding: 18px 14px; }
 }
+
+/* 여러 일기장 관리 */
+.diary-switch-list, .saved-diary-list { display: flex; flex-direction: column; gap: 8px; }
+.diary-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.diary-switch-row.active { background: var(--accent-soft); }
+.diary-switch-row > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.diary-switch-row strong { font-size: 14px; }
+.diary-switch-row small, .saved-diary-button small { color: var(--ink-soft); font-size: 11px; overflow-wrap: anywhere; }
+.diary-current-badge { flex: 0 0 auto; font-size: 11px; font-weight: 700; color: var(--accent); }
+.diary-add-form { margin-top: 4px; }
+.saved-diary-list { margin-bottom: 16px; }
+.saved-diary-button { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
+.settings-divider { height: 1px; background: var(--line); margin: 6px 0 2px; }

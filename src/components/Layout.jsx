@@ -1,6 +1,5 @@
 import React from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { SITE_TITLE } from '../config.js'
 import Avatar from './Avatar.jsx'
 
 export default function Layout({ activeMemberId, onSelectMember, onOpenSettings, children }) {
@@ -16,7 +15,7 @@ export default function Layout({ activeMemberId, onSelectMember, onOpenSettings,
       <aside className="sidebar">
         <div className="sidebar-top">
           <button className="logo" onClick={() => onSelectMember(null)} title="캘린더로 돌아가기">
-            {SITE_TITLE}
+            {auth.diaryTitle}
           </button>
 
           <nav className="member-nav">
