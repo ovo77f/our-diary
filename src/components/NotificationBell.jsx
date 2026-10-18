@@ -28,7 +28,7 @@ export default function NotificationBell({ onOpenEntry }) {
     setLoading(true)
     setError('')
     try {
-      // 처음 알림을 켠 시점을 기준으로 새 댓글만 표시합니다.
+      // 기존 알림 시작 시각은 유지하되, 이전 댓글도 읽은 상태로 목록에 표시합니다.
       let baseline = localStorage.getItem(baselineKey)
       if (!baseline) {
         baseline = new Date().toISOString()
@@ -47,7 +47,7 @@ export default function NotificationBell({ onOpenEntry }) {
           const comments = result.json.comments || []
           const mine = comments.filter((c) => c.author === memberId)
           for (const comment of comments) {
-            if (comment.author === memberId || !comment.createdAt || comment.createdAt <= baseline) continue
+            if (comment.author === memberId || !comment.createdAt) continue
             const isMyEntry = author === memberId
             const participatedBefore = mine.some((c) => c.createdAt && c.createdAt < comment.createdAt)
             if (!isMyEntry && !participatedBefore) continue
@@ -62,8 +62,15 @@ export default function NotificationBell({ onOpenEntry }) {
       await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENT, jobs.length) }, worker))
       if (currentRun !== runId.current) return
       results.sort((a, b) => b.comment.createdAt.localeCompare(a.comment.createdAt))
+      // 알림 기능 도입 이전 댓글은 읽음으로 취급합니다. 이미 읽은 기록도 유지합니다.
+      const storedRead = readIds(key)
+      const historicIds = results.filter((item) => item.comment.createdAt <= baseline).map((item) => item.id)
+      const mergedRead = [...new Set([...storedRead, ...historicIds])]
+      if (mergedRead.length !== storedRead.length) {
+        localStorage.setItem(key, JSON.stringify(mergedRead))
+      }
       setItems(results)
-      setReadIdsState(readIds(key))
+      setReadIdsState(mergedRead)
     } catch (e) {
       if (currentRun === runId.current) setError(e.message || '알림을 불러오지 못했습니다.')
     } finally {
@@ -100,7 +107,7 @@ export default function NotificationBell({ onOpenEntry }) {
       {open && <div className="notification-panel">
         <div className="notification-panel-header"><strong>댓글 알림</strong><button className="btn btn-ghost btn-small" onClick={refresh} disabled={loading}>{loading ? '확인 중…' : '새로고침'}</button></div>
         {error && <p className="notification-note">{error}</p>}
-        {!loading && !error && items.length === 0 && <p className="notification-note">새 댓글 알림이 없습니다.</p>}
+        {!loading && !error && items.length === 0 && <p className="notification-note">표시할 댓글이 없습니다.</p>}
         {loading && items.length === 0 && <p className="notification-note">댓글을 확인하고 있습니다…</p>}
         <div className="notification-items">{items.map((item) => {
           const name = auth.members.find((m) => m.id === item.comment.author)?.displayName || item.comment.author
