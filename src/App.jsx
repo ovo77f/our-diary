@@ -13,6 +13,7 @@ function Shell() {
   const auth = useAuth()
   const [activeMemberId, setActiveMemberId] = useState(null) // null = 캘린더 보기
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [selectedDateFromAlert, setSelectedDateFromAlert] = useState(null)
 
   useEffect(() => {
     if (auth.currentMember?.color) {
@@ -37,9 +38,14 @@ function Shell() {
 
   if (!ready) return <Setup />
 
+  function openNotificationEntry(date) {
+    setActiveMemberId(null)
+    setSelectedDateFromAlert(date)
+  }
+
   return (
-    <Layout activeMemberId={activeMemberId} onSelectMember={setActiveMemberId} onOpenSettings={() => setSettingsOpen(true)}>
-      {activeMemberId ? <UserFeedView memberId={activeMemberId} /> : <CalendarPage />}
+    <Layout onOpenNotificationEntry={openNotificationEntry} activeMemberId={activeMemberId} onSelectMember={setActiveMemberId} onOpenSettings={() => setSettingsOpen(true)}>
+      {activeMemberId ? <UserFeedView memberId={activeMemberId} /> : <CalendarPage selectedDateFromAlert={selectedDateFromAlert} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </Layout>
   )

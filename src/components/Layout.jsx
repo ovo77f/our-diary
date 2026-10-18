@@ -1,8 +1,9 @@
 import React from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import Avatar from './Avatar.jsx'
+import NotificationBell from './NotificationBell.jsx'
 
-export default function Layout({ activeMemberId, onSelectMember, onOpenSettings, children }) {
+export default function Layout({ activeMemberId, onSelectMember, onOpenSettings, onOpenNotificationEntry, children }) {
   const auth = useAuth()
 
   function handleMemberClick(id) {
@@ -14,9 +15,17 @@ export default function Layout({ activeMemberId, onSelectMember, onOpenSettings,
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-top">
-          <button className="logo" onClick={() => onSelectMember(null)} title="캘린더로 돌아가기">
-            {auth.diaryTitle}
-          </button>
+          <div className="sidebar-heading">
+            <button className="logo" onClick={() => onSelectMember(null)} title="캘린더로 돌아가기">
+              {auth.diaryTitle}
+            </button>
+            <div className="sidebar-heading-actions">
+              <NotificationBell onOpenEntry={onOpenNotificationEntry} />
+              <button className="mobile-settings-btn" type="button" onClick={onOpenSettings} aria-label="설정" title="설정">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.05 1.57V21h-3v-.09a1.7 1.7 0 0 0-1.05-1.57 1.7 1.7 0 0 0-1.87.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 0 0 7 15.7 1.7 1.7 0 0 0 5.43 14.6H5v-3h.43A1.7 1.7 0 0 0 7 10.55a1.7 1.7 0 0 0-.34-1.87L6.6 8.62 8.72 6.5l.06.06a1.7 1.7 0 0 0 1.87.34A1.7 1.7 0 0 0 11.7 5.33V5h3v.33a1.7 1.7 0 0 0 1.05 1.57 1.7 1.7 0 0 0 1.87-.34l.06-.06 2.12 2.12-.06.06a1.7 1.7 0 0 0-.34 1.87 1.7 1.7 0 0 0 1.57 1.05H21v3h-.03A1.7 1.7 0 0 0 19.4 15Z"/></svg>
+              </button>
+            </div>
+          </div>
 
           <nav className="member-nav">
             <button

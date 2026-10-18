@@ -373,3 +373,37 @@
 .saved-diary-list { margin-bottom: 16px; }
 .saved-diary-button { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
 .settings-divider { height: 1px; background: var(--line); margin: 6px 0 2px; }
+
+/* 댓글 알림함 */
+.notification-wrap { position: relative; }
+.notification-trigger { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 38px; border: 1px solid var(--border, #ddd); border-radius: 12px; background: white; color: inherit; cursor: pointer; }
+.notification-count { position: absolute; top: -7px; right: -8px; min-width: 19px; height: 19px; border-radius: 12px; background: #d94c67; color: white; font-size: 11px; line-height: 19px; text-align: center; padding: 0 4px; }
+.notification-panel { position: absolute; z-index: 100; bottom: 45px; left: 0; width: min(350px, 85vw); max-height: 430px; overflow-y: auto; border: 1px solid #ddd; background: #fff; color: #333; border-radius: 12px; box-shadow: 0 8px 30px #0002; }
+.notification-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
+.notification-note { padding: 14px; font-size: 13px; }
+.notification-items { display: flex; flex-direction: column; }
+.notification-item { text-align: left; display: flex; flex-direction: column; gap: 3px; border: 0; border-bottom: 1px solid #eee; background: white; padding: 11px 13px; cursor: pointer; font-size: 12px; }
+.notification-item.unread { background: #fff1f5; }
+.notification-item-title { font-weight: 600; }
+.notification-item-date { opacity: .65; }
+.notification-item-preview { opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+/* v1.2.5: 제목 옆 알림, 사이드바 바깥으로 펼쳐지는 알림 패널 */
+.sidebar-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.sidebar-heading .logo { min-width: 0; overflow-wrap: anywhere; cursor: pointer; }
+.sidebar-heading-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.mobile-settings-btn { display: none; }
+.sidebar-heading .notification-panel { top: -2px; bottom: auto; left: calc(100% + 21px); width: 310px; max-height: min(480px, 75vh); }
+@media (max-width: 640px) {
+  .sidebar { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 10px; padding: 12px 14px; overflow: visible; height: auto; position: relative; z-index: 10; }
+  .sidebar-top { display: flex; flex-direction: column; align-items: stretch; gap: 9px; overflow: visible; width: 100%; }
+  .sidebar-heading { width: 100%; min-height: 38px; }
+  .sidebar-heading .logo { font-size: 18px; text-align: left; white-space: normal; }
+  .sidebar-heading-actions { gap: 7px; }
+  .sidebar-heading .notification-trigger, .mobile-settings-btn { width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .member-nav { display: flex; flex-direction: row; gap: 6px; overflow-x: auto; overflow-y: hidden; width: 100%; padding-bottom: 4px; scrollbar-width: thin; }
+  .member-nav-item { flex: 0 0 auto; padding: 7px 9px; gap: 6px; }
+  .member-nav-name { flex: 0 1 auto; max-width: 95px; }
+  .sidebar-bottom { display: none; }
+  .sidebar-heading .notification-panel { position: absolute; top: calc(100% + 6px); right: 0; left: auto; bottom: auto; width: min(340px, calc(100vw - 28px)); max-height: min(480px, 65vh); }
+}

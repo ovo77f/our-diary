@@ -4,10 +4,12 @@ import { loadIndex, todayStr } from '../lib/dataModel.js'
 import Calendar from './Calendar.jsx'
 import DualEntryView from './DualEntryView.jsx'
 
-export default function CalendarPage() {
+export default function CalendarPage({ selectedDateFromAlert }) {
   const auth = useAuth()
   const [index, setIndex] = useState({})
   const [selectedDate, setSelectedDate] = useState(todayStr())
+
+  useEffect(() => { if (selectedDateFromAlert) setSelectedDate(selectedDateFromAlert) }, [selectedDateFromAlert])
 
   const refreshIndex = useCallback(async () => {
     const { json } = await loadIndex(auth.client)
