@@ -407,3 +407,11 @@
   .sidebar-bottom { display: none; }
   .sidebar-heading .notification-panel { position: absolute; top: calc(100% + 6px); right: 0; left: auto; bottom: auto; width: min(340px, calc(100vw - 28px)); max-height: min(480px, 65vh); }
 }
+
+/* 댓글 수정·삭제 */
+.comment-actions { display: inline-flex; align-items: center; gap: 2px; margin-left: auto; }
+.comment-actions .btn { padding: 2px 6px; font-size: 11px; }
+.comment-meta { flex-wrap: wrap; }
+.comment-edit { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.comment-edit textarea { width: 100%; min-height: 70px; resize: vertical; box-sizing: border-box; }
+.comment-edit-actions { display: flex; gap: 6px; }

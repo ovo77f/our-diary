@@ -4,6 +4,7 @@ import {
   deleteEntry, getChecklistFields, imagePath, makeCommentId, saveEntry, toggleReaction, withNewComment,
 } from '../lib/dataModel.js'
 import { resizeImageFile } from '../lib/image.js'
+import { syncCommentNotifications, mutateNotifications } from '../lib/notifications.js'
 import Avatar from './Avatar.jsx'
 import RemoteImage from './RemoteImage.jsx'
 import Lightbox from './Lightbox.jsx'
@@ -28,6 +29,13 @@ export default function EntryCard({ entry: initialEntry, sha: initialSha, date, 
     const { entry: saved, sha: nextSha } = await saveEntry(auth.client, date, memberId, nextEntry, sha)
     setEntry(saved)
     setSha(nextSha)
+    // 댓글 데이터 저장이 먼저 완료됩니다. 알림 기록 실패는 댓글 저장을 취소하지 않습니다.
+    try {
+      await syncCommentNotifications(auth.client, date, memberId, entry.comments || [], saved.comments || [])
+    } catch (error) {
+      console.warn('댓글은 저장됐지만 알림 기록 동기화에 실패했습니다.', error)
+      window.alert('댓글은 저장됐지만 알림 기록을 갱신하지 못했습니다. 다시 시도해 주세요.')
+    }
   }
 
   async function handleToggleReaction(emoji) {
@@ -63,12 +71,41 @@ export default function EntryCard({ entry: initialEntry, sha: initialSha, date, 
     await persist(nextEntry)
   }
 
+  async function handleEditComment(commentId, text) {
+    if (busy) throw new Error('다른 작업이 진행 중이에요.')
+    const comment = (entry.comments || []).find((c) => c.id === commentId)
+    if (!comment || comment.author !== auth.currentMember?.id) throw new Error('본인 댓글만 수정할 수 있어요.')
+    setBusy(true)
+    try {
+      const comments = entry.comments.map((c) => c.id === commentId ? { ...c, text, editedAt: new Date().toISOString() } : c)
+      await persist({ ...entry, comments })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleDeleteComment(commentId) {
+    if (busy) throw new Error('다른 작업이 진행 중이에요.')
+    const comment = (entry.comments || []).find((c) => c.id === commentId)
+    if (!comment || comment.author !== auth.currentMember?.id) throw new Error('본인 댓글만 삭제할 수 있어요.')
+    setBusy(true)
+    try {
+      await persist({ ...entry, comments: entry.comments.filter((c) => c.id !== commentId) })
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function handleDelete() {
     if (busy) return
     if (!window.confirm('정말 이 글을 삭제할까요? 댓글과 반응도 함께 사라지고, 되돌릴 수 없어요.')) return
     setBusy(true)
     try {
       await deleteEntry(auth.client, date, memberId, sha)
+      try {
+        const prefix = `${date}/${memberId}/`
+        await mutateNotifications(auth.client, state => ({...state, events: (state.events || []).filter(e => !e.id.startsWith(prefix))}))
+      } catch (error) { console.warn('삭제한 일기의 알림 기록 정리에 실패했습니다.', error) }
       onDeleted?.()
     } catch (e) {
       window.alert(e.message || '삭제에 실패했어요.')
@@ -153,7 +190,7 @@ export default function EntryCard({ entry: initialEntry, sha: initialSha, date, 
       <ReactionBar entry={entry} onToggle={handleToggleReaction} />
 
       <div className="comment-section">
-        <CommentList comments={entry.comments} />
+        <CommentList comments={entry.comments} onEdit={handleEditComment} onDelete={handleDeleteComment} busy={busy} />
         <CommentForm onSubmit={handleAddComment} />
       </div>
 
